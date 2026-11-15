@@ -72,13 +72,13 @@ function levelsV(){
  return o.map((l,i)=>(i===k?'<h2>Extended list</h2>':'')+row(l,i)).join('');
 }
 function playersV(){
- const m=PT(S.levels),a=[...S.users].sort((x,y)=>(m[y.id]||0)-(m[x.id]||0)||x.name.localeCompare(y.name));
+ const m=PT(S.levels),a=S.users.filter(u=>!isA(u.name)).sort((x,y)=>(m[y.id]||0)-(m[x.id]||0)||x.name.localeCompare(y.name));
  return a.length?a.map((u,i)=>box(i,nm(u),m[u.id]||0,pfp(u))).join(''):'<p class="mu">No players yet.</p>';
 }
 const pastV=()=>`<div class="cd">Pick a day: <input type="date" id="pd" max="${today()}" value="${PS?PS.d:today()}"></div><div id="pb"></div>`;
 function pastB(){
  if(!PS||!PS.s)return '<p class="mu">Nothing was recorded on or before that day.</p>';
- const s=PS.s,k=s.L.findIndex(l=>!(l.pts>0)),m=PT(s.L),pl=Object.keys(s.N).sort((a,b)=>(m[b]||0)-(m[a]||0));
+ const s=PS.s,k=s.L.findIndex(l=>!(l.pts>0)),m=PT(s.L),pl=Object.keys(s.N).filter(id=>!isA(s.N[id][0])).sort((a,b)=>(m[b]||0)-(m[a]||0));
  return `<p class="mu">Lists as they were on <b>${esc(s.d)}</b></p><h2>Levels</h2>`+s.L.map((l,i)=>(i===k?'<h2>Extended list</h2>':'')+box(i,esc(l.n),l.pts)).join('')+'<h2>Players</h2>'+pl.map((id,i)=>box(i,sp(s.N[id][0],s.N[id][1]),m[id]||0)).join('');
 }
 function adminV(){
