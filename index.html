@@ -57,7 +57,7 @@ const toast=m=>{const t=$('#ts');t.textContent=m;t.style.display='block';clearTi
 const sure=(k,t)=>{if(arm===k){arm='';return true}arm=k;const o=t.textContent;t.textContent='Sure?';setTimeout(()=>{if(arm===k){arm='';t.textContent=o}},2500);return false};
 async function save(){
  const s=snap();HS[s.d]=s;render();
- ls('gdl',JSON.stringify({S,HS}));
+ ls('gdl',JSON.stringify({S,HS}));push();
 }
 async function getSnap(d){let a=Object.values(HS);if(db)try{a=(await db.collection('hist').get()).docs.map(x=>x.data())}catch(_){}return a.filter(x=>x.d<=d).sort((x,y)=>x.d<y.d?1:-1)[0]||null}
 async function loadPast(){const d=($('#pd')||{}).value||today();const s=await getSnap(d);PS={d,s};const b=$('#pb');if(b)b.innerHTML=pastB()}
@@ -89,7 +89,7 @@ function adminV(){
   h+=`<div class="cd"><b>Admins</b> <span class="mu">(owner only)</span><br><input id="an" placeholder="Name"><input id="au2" placeholder="Username"><input id="ap" type="password" placeholder="Password"><button data-a="aa">Add admin</button><div style="margin-top:6px">${S.admins.map(a=>chip(sp(a.u)+` <span class="mu">${esc(a.name)}</span><button class="x" data-a="ra" data-u="${esc(a.u)}">✕</button>`)).join('')||'<span class="mu">no other admins</span>'}</div></div>`;
   h+=`<div class="cd"><b>Player looks</b>${S.users.map(u=>`<div style="display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap">${pfp(u)}<span style="min-width:110px">${nm(u)}</span>${isA(u.name)?'<span class="mu">red (admin)</span>':`<input type="color" data-a="col" data-u="${u.id}" value="${/^#[0-9a-f]{6}$/i.test(u.color)?u.color:'#ffffff'}">`}<label><input type="file" accept="image/*" data-a="pic" data-u="${u.id}" hidden><span class="bt">Picture</span></label><button data-a="cl" data-u="${u.id}">Reset</button></div>`).join('')||'<p class="mu">Add usernames first.</p>'}</div>`;
  }
- return h+'<div class="cd"><b>Publish changes</b><br><span class="mu">Edits are saved in this browser only. Press Export, then upload the downloaded data.json to your GitHub repository to update the public site.</span><br><button class="pri" data-a="ex">Export data.json</button></div><p><button data-a="lo">Log out</button></p>';
+ return h+''+tkCard()+'<p><button data-a="lo">Log out</button></p>';
 }
 function render(){
  if(!me&&ses)me=auth(ses.n,ses.u,ses.h);
@@ -106,7 +106,7 @@ document.addEventListener('click',e=>{
  const t=e.target.closest('[data-a]');
  if(!t){const r=e.target.closest('.rw[data-o]');if(r){op=op===r.dataset.o?null:r.dataset.o;render()}return}
  const a=t.dataset.a,i=t.dataset.i,u=t.dataset.u,l=S.levels.find(x=>x.id===i);
- if(/^(ex|up|dn|ed|rm|sl|au|ru|aw|rw)$/.test(a)&&!me)return;
+ if(/^(ex|tk|tx|up|dn|ed|rm|sl|au|ru|aw|rw)$/.test(a)&&!me)return;
  if(/^(aa|ra|cl)$/.test(a)&&!(me&&me.owner))return;
  if(a==='v'){view=t.dataset.v;edit=null;render();if(view==='past')try{$('#pd').showPicker()}catch(_){}}
  else if(a==='th'){th=th==='dark'?'light':'dark';ls('gdl_t',th);render()}
@@ -115,10 +115,12 @@ document.addEventListener('click',e=>{
  else if(a==='go'){
   const un=$('#lu').value,h=H('gdl|'+un.trim().toLowerCase()+'|'+$('#lp').value),r=auth($('#ln').value,un,h);
   if(!r){$('#le').textContent='Wrong name, username or password.';return}
-  me=r;ses={n:r.name,u:r.u,h};adoptLocal();try{sessionStorage.setItem('gdl_s',JSON.stringify(ses))}catch(_){}
+  me=r;ses={n:r.name,u:r.u,h};tk()?load():adoptLocal();try{sessionStorage.setItem('gdl_s',JSON.stringify(ses))}catch(_){}
   $('#md').style.display='none';$('#lp').value='';view='admin';render();
  }
  else if(a==='lo'){me=null;ses=null;try{sessionStorage.removeItem('gdl_s')}catch(_){}adoptBase();view='levels';render()}
+ else if(a==='tk'){const v=$('#tk').value.trim();if(!v)return;ls('gdl_tk',v);push();render()}
+ else if(a==='tx'){ls('gdl_tk','');render()}
  else if(a==='ex'){const b=new Blob([JSON.stringify({S,HS})],{type:'application/json'}),d=document.createElement('a');d.href=URL.createObjectURL(b);d.download='data.json';d.click()}
  else if(a==='up'||a==='dn'){const o=ord(),k=o.findIndex(x=>x.id===i),j=k+(a==='up'?-1:1),n=o[j];if(n&&(+n.pts>0)===(+o[k].pts>0)){[o[k],o[j]]=[n,o[k]];S.levels=o;save()}}
  else if(a==='ed'){edit=i;view='admin';render();scrollTo(0,0)}
@@ -155,6 +157,29 @@ document.addEventListener('change',e=>{
  if(a==='pic'&&t.files[0]){const f=new FileReader();f.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=64;const s=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,64,64);const x=U(t.dataset.u);if(x){x.pfp=c.toDataURL('image/jpeg',.7);save()}};im.src=f.result};f.readAsDataURL(t.files[0])}
 });
 $('#lp').addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('[data-a=go]').click()});
-fetch('data.json',{cache:'no-store'}).then(x=>x.ok?x.json():null).then(d=>{if(d&&d.S){BASE=d;adoptBase();if(ses&&auth(ses.n,ses.u,ses.h))adoptLocal();render()}}).catch(()=>{});
+const RAW='https://raw.githubusercontent.com/bogdanhtema-sudo/2GC/main/data.json',GH='https://api.github.com/repos/bogdanhtema-sudo/2GC/contents/data.json';
+const tk=()=>ls('gdl_tk')||'';
+const tkCard=()=>`<div class="cd"><b>Auto-publish</b> <span class="mu">${tk()?'connected: every change goes live by itself':'not connected: changes stay in this browser'}</span><br><input id="tk" type="password" placeholder="GitHub token" style="width:min(320px,100%)"><button class="pri" data-a="tk">Save token</button>${tk()?' <button data-a="tx">Remove</button>':''}<br><span class="mu">Create a fine-grained token on GitHub for the 2GC repository only, with Contents set to Read and write, and paste it here once.</span><br><button data-a="ex">Export data.json (backup)</button></div>`;
+let busy=false,again=false;
+async function push(){
+ if(!tk()||!me)return;if(busy){again=true;return}busy=true;
+ try{
+  const h={Authorization:'Bearer '+tk(),Accept:'application/vnd.github+json'};let sha;
+  const g=await fetch(GH+'?ref=main&t='+Date.now(),{headers:h});
+  if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw new Error('read '+g.status);
+  const b={message:'update list',branch:'main',content:btoa(unescape(encodeURIComponent(JSON.stringify({S,HS}))))};if(sha)b.sha=sha;
+  const w=await fetch(GH,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(b)});
+  if(!w.ok)throw new Error('save '+w.status);toast('Published');
+ }catch(e){toast('Publish failed: '+e.message)}
+ busy=false;if(again){again=false;push()}
+}
+async function load(){
+ let d=null;
+ for(const u of [RAW+'?t='+Date.now(),'data.json']){try{const x=await fetch(u,{cache:'no-store'});if(x.ok){d=await x.json();break}}catch(_){}}
+ if(!d||!d.S)return;
+ BASE=d;if(!me||tk()){adoptBase();render()}
+}
+setInterval(()=>{if(!me&&!document.hidden)load()},60000);
+load();
 render();
 </script></body></html>
