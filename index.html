@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>2GC’s official GD level list</title>
+<style>
+:root{--bg:#0a0a0a;--cd:#151515;--c2:#232323;--tx:#f1f1f1;--mu:#8f8f8f;--ac:#ff8a1f;--bd:#2d2d2d;--on:#111;color-scheme:dark;box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+:root[data-theme=light]{--bg:#f4f8ff;--cd:#fff;--c2:#e8f0ff;--tx:#0f2142;--mu:#5d6d8c;--ac:#2f6bff;--bd:#d2dff7;--on:#fff;color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{text-align:center;padding:22px 12px 6px}h1{margin:0;font-size:clamp(20px,5vw,30px);color:var(--ac)}
+nav{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:820px;margin:8px auto;padding:0 12px}
+#tabs{display:flex;gap:6px;flex-wrap:wrap}
+button,select,input{font:inherit;color:var(--tx)}
+button,.bt{background:var(--c2);border:1px solid var(--bd);border-radius:8px;padding:6px 12px;cursor:pointer;display:inline-block}
+button:hover,.bt:hover{border-color:var(--ac)}.on,.pri{background:var(--ac);color:var(--on);border-color:var(--ac);font-weight:600}
+main{max-width:820px;margin:0 auto;padding:6px 12px 90px}
+.lv,.cd{background:var(--cd);border:1px solid var(--bd);border-radius:12px;margin:8px 0;overflow:hidden}.cd{padding:12px 14px}
+.rw{display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;flex-wrap:wrap}
+.rk{color:var(--ac);min-width:40px}.ln{font-weight:600;flex:1;min-width:120px}
+.pt{background:var(--c2);border-radius:20px;padding:2px 10px;font-size:13px;color:var(--ac);white-space:nowrap}
+.yt{color:var(--on);background:var(--ac);border-radius:6px;padding:2px 9px;text-decoration:none}
+.ct button{padding:3px 8px;margin-left:3px}
+.dt{border-top:1px solid var(--bd);padding:6px 14px 10px;color:var(--mu)}.dt p{margin:6px 0}.dt b{color:var(--tx)}
+h2{color:var(--ac);margin:22px 0 2px;font-size:18px}.mu{color:var(--mu)}.pn{font-weight:600}
+input,select{background:var(--c2);border:1px solid var(--bd);border-radius:8px;padding:7px 9px;margin:3px 4px 3px 0;max-width:100%}
+.pf{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--c2);display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--ac)}
+.x{padding:0 6px;margin-left:4px;border-radius:50%}
+#th{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;border-radius:20px}
+#md{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
+.mm{background:var(--cd);border:1px solid var(--ac);border-radius:14px;padding:18px;width:min(340px,100%)}.mm input{width:100%;margin:5px 0}
+#ts{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--ac);color:var(--on);padding:8px 14px;border-radius:10px;display:none;z-index:9}
+</style></head><body>
+<header><h1>2GC’s official GD level list</h1></header>
+<nav><div id="tabs"></div><button id="adm" class="pri" data-a="adm">Admin</button></nav>
+<main id="main"></main>
+<button id="th" data-a="th"></button><div id="ts"></div>
+<div id="md"><div class="mm"><b>Admin login</b><input id="ln" placeholder="Name"><input id="lu" placeholder="Username"><input id="lp" type="password" placeholder="Password"><div id="le" style="color:#ff5555;min-height:22px"></div><button class="pri" data-a="go">Log in</button> <button data-a="cm">Cancel</button></div></div>
+<script>
+const OH='23lxixrk1md';
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(_){}};
+const H=s=>{let a=0xdeadbeef,b=0x41c6ce57;for(let i=0,c;i<s.length;i++){c=s.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);return(4294967296*(2097151&b)+(a>>>0)).toString(36)};
+const uid=()=>Math.random().toString(36).slice(2,9),today=()=>new Date().toISOString().slice(0,10),safe=u=>/^https?:\/\//i.test(u)?u:'';
+let S={users:[],admins:[],levels:[]},HS={},db=null,me=null,view='levels',op=null,edit=null,th=ls('gdl_t')==='light'?'light':'dark',PS=null,arm='',ses=null;
+let BASE=null;const blank=()=>({users:[],admins:[],levels:[]});
+const adoptLocal=()=>{try{const x=JSON.parse(ls('gdl')||'null');if(x&&x.S){S=Object.assign(blank(),x.S);HS=x.HS||{}}}catch(_){}};
+const adoptBase=()=>{if(BASE){S=Object.assign(blank(),BASE.S);HS=BASE.HS||{}}};
+adoptLocal();
+try{ses=JSON.parse(sessionStorage.getItem('gdl_s')||'null')}catch(_){}
+const U=i=>S.users.find(u=>u.id===i),isA=n=>{n=String(n).toLowerCase();return n==='regelebogdan'||S.admins.some(a=>a.u.toLowerCase()===n)};
+const auth=(n,u,h)=>{n=n.trim().toLowerCase();u=u.trim().toLowerCase();if(u==='regelebogdan'&&n==='bogdan'&&h===OH)return{name:'Bogdan',u:'RegeleBogdan',h,owner:1};const a=S.admins.find(a=>a.u.toLowerCase()===u&&a.name.toLowerCase()===n&&a.h===h);return a?{name:a.name,u:a.u,h}:null};
+const sp=(n,c)=>`<span class="pn" style="color:${isA(n)?'#ff3b3b':esc(c||'inherit')}">${esc(n)}</span>`,nm=u=>u?sp(u.name,u.color):'<i class="mu">—</i>';
+const pfp=u=>u&&u.pfp?`<img class="pf" src="${esc(u.pfp)}" alt="">`:`<span class="pf">${esc(((u&&u.name)||'?')[0]).toUpperCase()}</span>`;
+const ord=()=>[...S.levels.filter(l=>+l.pts>0),...S.levels.filter(l=>!(+l.pts>0))];
+const W=l=>[...new Set([...(l.w||[]),l.ver].filter(Boolean))];
+const PT=L=>{const m={};L.forEach(l=>W(l).forEach(i=>m[i]=(m[i]||0)+(+l.pts||0)));return m};
+const snap=()=>({d:today(),L:ord().map(l=>({n:l.name,pts:+l.pts||0,w:W(l)})),N:Object.fromEntries(S.users.map(u=>[u.id,[u.name,u.color||'']]))});
+const toast=m=>{const t=$('#ts');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2600)};
+const sure=(k,t)=>{if(arm===k){arm='';return true}arm=k;const o=t.textContent;t.textContent='Sure?';setTimeout(()=>{if(arm===k){arm='';t.textContent=o}},2500);return false};
+async function save(){
+ const s=snap();HS[s.d]=s;render();
+ ls('gdl',JSON.stringify({S,HS}));
+}
+async function getSnap(d){let a=Object.values(HS);if(db)try{a=(await db.collection('hist').get()).docs.map(x=>x.data())}catch(_){}return a.filter(x=>x.d<=d).sort((x,y)=>x.d<y.d?1:-1)[0]||null}
+async function loadPast(){const d=($('#pd')||{}).value||today();const s=await getSnap(d);PS={d,s};const b=$('#pb');if(b)b.innerHTML=pastB()}
+const box=(i,n,p,x)=>`<div class="lv"><div class="rw" style="cursor:default"><b class="rk">#${i+1}</b>${x||''}<span class="ln">${n}</span><span class="pt">${p} pts</span></div></div>`;
+function row(l,i){
+ const w=l.w||[];
+ return `<div class="lv"><div class="rw" data-o="${l.id}"><b class="rk">#${i+1}</b><span class="ln">${esc(l.name)}</span><span class="pt">${+l.pts||0} pts</span>${safe(l.yt)?`<a class="yt" href="${esc(safe(l.yt))}" target="_blank" rel="noopener" title="Watch the showcase">▶</a>`:''}${me?`<span class="ct"><button data-a="up" data-i="${l.id}">▲</button><button data-a="dn" data-i="${l.id}">▼</button><button data-a="ed" data-i="${l.id}">✎</button><button data-a="rm" data-i="${l.id}">✕</button></span>`:''}</div>${op===l.id?`<div class="dt"><p>Verified on: <b>${esc(l.vd||'—')}</b> · Added to the list: <b>${esc(l.ad)}</b> by <b>${esc(l.by)}</b></p><p>Creator: ${nm(U(l.cr))} · Verifier: ${nm(U(l.ver))}</p><p>Beaten by (${w.length}): ${w.map(i=>nm(U(i))+(me?`<button class="x" data-a="rw" data-i="${l.id}" data-u="${i}">✕</button>`:'')).join(', ')||'<i>nobody yet</i>'}</p>${me?`<p><select id="ws"><option value="">— pick player —</option>${S.users.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select><button data-a="aw" data-i="${l.id}">+ Add winner</button></p>`:''}</div>`:''}</div>`;
+}
+function levelsV(){
+ const o=ord();if(!o.length)return `<p class="mu">No levels yet.${me?'':' Admins can add them from the Admin tab.'}</p>`;
+ const k=o.findIndex(l=>!(+l.pts>0));
+ return o.map((l,i)=>(i===k?'<h2>Extended list</h2>':'')+row(l,i)).join('');
+}
+function playersV(){
+ const m=PT(S.levels),a=[...S.users].sort((x,y)=>(m[y.id]||0)-(m[x.id]||0)||x.name.localeCompare(y.name));
+ return a.length?a.map((u,i)=>box(i,nm(u),m[u.id]||0,pfp(u))).join(''):'<p class="mu">No players yet.</p>';
+}
+const pastV=()=>`<div class="cd">Pick a day: <input type="date" id="pd" max="${today()}" value="${PS?PS.d:today()}"></div><div id="pb"></div>`;
+function pastB(){
+ if(!PS||!PS.s)return '<p class="mu">Nothing was recorded on or before that day.</p>';
+ const s=PS.s,k=s.L.findIndex(l=>!(l.pts>0)),m=PT(s.L),pl=Object.keys(s.N).sort((a,b)=>(m[b]||0)-(m[a]||0));
+ return `<p class="mu">Lists as they were on <b>${esc(s.d)}</b></p><h2>Levels</h2>`+s.L.map((l,i)=>(i===k?'<h2>Extended list</h2>':'')+box(i,esc(l.n),l.pts)).join('')+'<h2>Players</h2>'+pl.map((id,i)=>box(i,sp(s.N[id][0],s.N[id][1]),m[id]||0)).join('');
+}
+function adminV(){
+ const e=S.levels.find(l=>l.id===edit)||{},sel=(i,v)=>`<select id="${i}"><option value="">— pick —</option>${S.users.map(u=>`<option value="${u.id}"${u.id===v?' selected':''}>${esc(u.name)}</option>`).join('')}</select>`,chip=x=>`<span class="pt" style="margin:2px;display:inline-block">${x}</span>`;
+ let h=`<div class="cd"><b>${e.id?'Edit':'Add'} level</b><br><input id="fn" placeholder="Level name" value="${esc(e.name)}"><input id="fp" type="number" min="0" placeholder="Points" value="${e.pts??''}" style="width:100px"><input id="fk" type="number" min="1" placeholder="Position #" value="${e.id?ord().indexOf(e)+1:''}" style="width:110px"><br><input id="fy" placeholder="YouTube link" value="${esc(e.yt)}" style="width:min(430px,100%)"><br><span class="mu">Creator</span> ${sel('fc',e.cr)} <span class="mu">Verifier</span> ${sel('fv',e.ver)} <span class="mu">Verified on</span> <input id="fd" type="date" value="${esc(e.vd)}"><br><button class="pri" data-a="sl">${e.id?'Save changes':'Add level'}</button>${e.id?' <button data-a="ce">Cancel</button>':''} <span class="mu">0 points = Extended list. Empty position = end of the list.</span></div>`;
+ h+=`<div class="cd"><b>Usernames</b><br><input id="nu" placeholder="New username"><button data-a="au">Add</button><div style="margin-top:6px">${S.users.map(u=>chip(nm(u)+`<button class="x" data-a="ru" data-u="${u.id}">✕</button>`)).join('')||'<span class="mu">none yet</span>'}</div></div>`;
+ if(me.owner){
+  h+=`<div class="cd"><b>Admins</b> <span class="mu">(owner only)</span><br><input id="an" placeholder="Name"><input id="au2" placeholder="Username"><input id="ap" type="password" placeholder="Password"><button data-a="aa">Add admin</button><div style="margin-top:6px">${S.admins.map(a=>chip(sp(a.u)+` <span class="mu">${esc(a.name)}</span><button class="x" data-a="ra" data-u="${esc(a.u)}">✕</button>`)).join('')||'<span class="mu">no other admins</span>'}</div></div>`;
+  h+=`<div class="cd"><b>Player looks</b>${S.users.map(u=>`<div style="display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap">${pfp(u)}<span style="min-width:110px">${nm(u)}</span>${isA(u.name)?'<span class="mu">red (admin)</span>':`<input type="color" data-a="col" data-u="${u.id}" value="${/^#[0-9a-f]{6}$/i.test(u.color)?u.color:'#ffffff'}">`}<label><input type="file" accept="image/*" data-a="pic" data-u="${u.id}" hidden><span class="bt">Picture</span></label><button data-a="cl" data-u="${u.id}">Reset</button></div>`).join('')||'<p class="mu">Add usernames first.</p>'}</div>`;
+ }
+ return h+'<div class="cd"><b>Publish changes</b><br><span class="mu">Edits are saved in this browser only. Press Export, then upload the downloaded data.json to your GitHub repository to update the public site.</span><br><button class="pri" data-a="ex">Export data.json</button></div><p><button data-a="lo">Log out</button></p>';
+}
+function render(){
+ if(!me&&ses)me=auth(ses.n,ses.u,ses.h);
+ if(me&&!auth(me.name,me.u,me.h))me=null;
+ if(!me&&view==='admin')view='levels';
+ document.documentElement.dataset.theme=th;
+ $('#th').textContent=th==='dark'?'☀ Light':'🌙 Dark';$('#adm').textContent=me?'Admin ✓':'Admin';
+ $('#tabs').innerHTML=['levels','players','past'].map(t=>`<button class="${view===t?'on':''}" data-a="v" data-v="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('');
+ $('#main').innerHTML={levels:levelsV,players:playersV,past:pastV,admin:adminV}[view]();
+ if(view==='past')loadPast();
+}
+document.addEventListener('click',e=>{
+ if(e.target.closest('a'))return;
+ const t=e.target.closest('[data-a]');
+ if(!t){const r=e.target.closest('.rw[data-o]');if(r){op=op===r.dataset.o?null:r.dataset.o;render()}return}
+ const a=t.dataset.a,i=t.dataset.i,u=t.dataset.u,l=S.levels.find(x=>x.id===i);
+ if(/^(ex|up|dn|ed|rm|sl|au|ru|aw|rw)$/.test(a)&&!me)return;
+ if(/^(aa|ra|cl)$/.test(a)&&!(me&&me.owner))return;
+ if(a==='v'){view=t.dataset.v;edit=null;render();if(view==='past')try{$('#pd').showPicker()}catch(_){}}
+ else if(a==='th'){th=th==='dark'?'light':'dark';ls('gdl_t',th);render()}
+ else if(a==='adm'){if(me){view='admin';edit=null;render()}else{$('#le').textContent='';$('#md').style.display='flex'}}
+ else if(a==='cm')$('#md').style.display='none';
+ else if(a==='go'){
+  const un=$('#lu').value,h=H('gdl|'+un.trim().toLowerCase()+'|'+$('#lp').value),r=auth($('#ln').value,un,h);
+  if(!r){$('#le').textContent='Wrong name, username or password.';return}
+  me=r;ses={n:r.name,u:r.u,h};adoptLocal();try{sessionStorage.setItem('gdl_s',JSON.stringify(ses))}catch(_){}
+  $('#md').style.display='none';$('#lp').value='';view='admin';render();
+ }
+ else if(a==='lo'){me=null;ses=null;try{sessionStorage.removeItem('gdl_s')}catch(_){}adoptBase();view='levels';render()}
+ else if(a==='ex'){const b=new Blob([JSON.stringify({S,HS})],{type:'application/json'}),d=document.createElement('a');d.href=URL.createObjectURL(b);d.download='data.json';d.click()}
+ else if(a==='up'||a==='dn'){const o=ord(),k=o.findIndex(x=>x.id===i),j=k+(a==='up'?-1:1),n=o[j];if(n&&(+n.pts>0)===(+o[k].pts>0)){[o[k],o[j]]=[n,o[k]];S.levels=o;save()}}
+ else if(a==='ed'){edit=i;view='admin';render();scrollTo(0,0)}
+ else if(a==='ce'){edit=null;render()}
+ else if(a==='rm'){if(sure('rm'+i,t)){S.levels=S.levels.filter(x=>x.id!==i);save()}}
+ else if(a==='sl'){
+  const n=$('#fn').value.trim();if(!n)return toast('Level name is required');
+  let x=S.levels.find(y=>y.id===edit);
+  if(!x){x={id:uid(),w:[],ad:today(),by:me.name};S.levels.push(x)}
+  Object.assign(x,{name:n,pts:Math.max(0,+$('#fp').value||0),yt:safe($('#fy').value.trim()),cr:$('#fc').value,ver:$('#fv').value,vd:$('#fd').value});
+  const k=parseInt($('#fk').value);if(k>0){const o=ord().filter(y=>y!==x);o.splice(Math.min(k-1,o.length),0,x);S.levels=o}
+  edit=null;save();toast('Level saved');
+ }
+ else if(a==='au'){const n=$('#nu').value.trim();if(!n)return;if(S.users.some(x=>x.name.toLowerCase()===n.toLowerCase()))return toast('That username already exists');S.users.push({id:uid(),name:n,color:'',pfp:''});save()}
+ else if(a==='ru'){if(sure('ru'+u,t)){S.users=S.users.filter(x=>x.id!==u);S.levels.forEach(x=>{x.w=(x.w||[]).filter(y=>y!==u);if(x.cr===u)x.cr='';if(x.ver===u)x.ver=''});save()}}
+ else if(a==='aw'){const w=$('#ws').value;if(l&&w&&!(l.w||[]).includes(w)){l.w=[...(l.w||[]),w];save()}}
+ else if(a==='rw'){if(l){l.w=(l.w||[]).filter(x=>x!==u);save()}}
+ else if(a==='aa'){
+  const n=$('#an').value.trim(),un=$('#au2').value.trim(),p=$('#ap').value;
+  if(!n||!un||!p)return toast('Fill in name, username and password');
+  if(isA(un))return toast('That username is already an admin');
+  S.admins.push({name:n,u:un,h:H('gdl|'+un.toLowerCase()+'|'+p)});
+  if(!S.users.some(x=>x.name.toLowerCase()===un.toLowerCase()))S.users.push({id:uid(),name:un,color:'',pfp:''});
+  save();
+ }
+ else if(a==='ra'){if(sure('ra'+u,t)){S.admins=S.admins.filter(x=>x.u!==u);save()}}
+ else if(a==='cl'){const x=U(u);if(x){x.color='';x.pfp='';save()}}
+});
+document.addEventListener('change',e=>{
+ const t=e.target,a=t.dataset.a;
+ if(t.id==='pd')loadPast();
+ if(!(me&&me.owner))return;
+ if(a==='col'&&U(t.dataset.u)){U(t.dataset.u).color=t.value;save()}
+ if(a==='pic'&&t.files[0]){const f=new FileReader();f.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=64;const s=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,64,64);const x=U(t.dataset.u);if(x){x.pfp=c.toDataURL('image/jpeg',.7);save()}};im.src=f.result};f.readAsDataURL(t.files[0])}
+});
+$('#lp').addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('[data-a=go]').click()});
+fetch('data.json',{cache:'no-store'}).then(x=>x.ok?x.json():null).then(d=>{if(d&&d.S){BASE=d;adoptBase();if(ses&&auth(ses.n,ses.u,ses.h))adoptLocal();render()}}).catch(()=>{});
+render();
+</script></body></html>
